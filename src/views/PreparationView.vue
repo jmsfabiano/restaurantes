@@ -57,7 +57,7 @@
                 </div>
                 <p class="mb-0 mt-2 list-special" v-for="(time, index) in dataTime.special" :key="index">
                     <span v-if="time">
-                        {{ time.day }}: {{ time.time }}, das {{ time.open }} às {{ time.close }}
+                        {{ time.day }}: {{ time.time }} minutos, das {{ time.open }} às {{ time.close }}
                         <span class="add-item icon-trash" role="button" @click="removeSpecialTime(index)"></span>
                     </span>
                 </p>
