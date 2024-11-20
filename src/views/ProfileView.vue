@@ -10,7 +10,7 @@
               <span class="remove-image icon-close" @click="removeCover"></span>
               <img :src="dataCompany.cover_photo ? dataCompany.cover_photo : ''" alt="Capa" @click="uploadCover">
             </div>
-            <div v-else class="local-cover" @click="uploadCover"> 
+            <div v-else class="local-cover" @click="uploadCover">
               <div class="border icon-image">
                 <span class="label-image"><u>Adicionar capa</u></span>
                 <span class="label-image">JPEG, JPG ou PNG de até 7mb</span>
@@ -23,9 +23,10 @@
             <div>
               <div class="local-image" v-if="dataCompany.logo_photo">
                 <span class="remove-image remove-logo icon-close" @click="removeLogo"></span>
-                <img v-if="dataCompany.logo_photo" :src="dataCompany.logo_photo ? dataCompany.logo_photo : ''" alt="Logo" @click="uploadLogo">
+                <img v-if="dataCompany.logo_photo" :src="dataCompany.logo_photo ? dataCompany.logo_photo : ''"
+                  alt="Logo" @click="uploadLogo">
               </div>
-              <div v-else class="local-logo" @click="uploadLogo"> 
+              <div v-else class="local-logo" @click="uploadLogo">
                 <div class="border icon-image">
                   <span class="label-image"><u>Adicionar logotipo</u></span>
                 </div>
@@ -37,7 +38,7 @@
       </div>
       <div class="col-lg-6 information">
         <h3>Informações Gerais <span class="edit-data" @click="showModalCompany = true"></span></h3>
-        <hr/>
+        <hr />
         <p>
           <span class="trade">{{ dataCompany.display_name }}</span>
           <span> - {{ dataCompany.name }}</span>
@@ -55,17 +56,20 @@
     <div class="row">
       <div class="col-lg-6">
         <div class="categories">
-          <hr/>
+          <hr />
           <h3>Categorias <span class="edit-data" @click="showModalCategories = true"></span></h3>
-          <p class="hint" v-if="completeConfig">Atenção: As categorias poderão ser editadas somente de 20 em 20 dias.</p>
+          <p class="hint" v-if="completeConfig">Atenção: As categorias poderão ser editadas somente de 20 em 20 dias.
+          </p>
           <p class="hint" v-else>Selecione a categoria na qual o seu estabelecimento faz parte.</p>
-          <ul v-if="dataCompany.category">
-            <li class="input-base">{{ dataCompany.category }}</li>
+          <ul v-if="Array.isArray(dataCompany?.categories) && typeof dataCompany.categories[0]">
+            <li v-for="(category, index) in dataCompany.categories" :key="index" :value="category">
+              <span class="input-base">{{ category.name }}</span>
+            </li>
           </ul>
           <p class="mb-0 required-alert top-zero" v-show="invalid.category">*Campo obrigatório</p>
         </div>
         <div class="preparation-time">
-          <hr/>
+          <hr />
           <h3>Tempo médio de preparo <router-link to="/preparo" class="edit-data"></router-link></h3>
           <p class="hint">Esse será o tempo médio de preparo que o estabelecimento terá para preparar o pedido.</p>
           <ul>
@@ -73,9 +77,10 @@
           </ul>
         </div>
         <div class="order-types">
-          <hr/>
+          <hr />
           <h3>Formas de pedidos aceitas <span class="edit-data" @click="showModalOrderTypes = true"></span></h3>
-          <p class="hint">Essas serão as formas com que o cliente poderá pedir do seu estabelecimento através do aplicativo.</p>
+          <p class="hint">Essas serão as formas com que o cliente poderá pedir do seu estabelecimento através do
+            aplicativo.</p>
           <ul>
             <li class="input-base" v-if="dataCompany.withdrawal_on">Retirada</li>
             <li class="input-base" v-if="dataCompany.eat_on">Comer no local</li>
@@ -83,26 +88,28 @@
           <p class="mb-0 required-alert top-zero" v-show="invalid.orderTypes">*Campo obrigatório</p>
         </div>
         <div class="scheduling">
-          <hr/>
+          <hr />
           <h3>Agendamentos</h3>
           <p class="hint">Permite o agendamento de entregas?</p>
           <label class="switch-yn ml-1">
-            <input type="checkbox" v-model="dataCompany.scheduling" @change="toggleScheduling"/>
+            <input type="checkbox" v-model="dataCompany.allows_schedule" @change="toggleScheduling" />
             <span class="slider round"></span>
           </label>
         </div>
       </div>
       <div class="col-lg-6">
         <div class="description">
-          <hr/>
+          <hr />
           <h3>Descrição</h3>
-          <textarea v-model="dataCompany.description" placeholder="Descrição do restaurante..." class="form-control"></textarea>
+          <textarea v-model="dataCompany.description" placeholder="Descrição do restaurante..."
+            class="form-control"></textarea>
           <p class="mb-0 mt-1 required-alert" v-show="invalid.description">*Campo obrigatório</p>
         </div>
         <div class="withdrawal">
           <h3 class="mt-4">Instruções para retirada</h3>
-          <textarea v-model="dataCompany.withdrawal" placeholder="Instruções para retirada..." class="form-control"></textarea>
-          <p class="mb-0 mt-1 required-alert" v-show="invalid.withdrawal">*Campo obrigatório</p>
+          <textarea v-model="dataCompany.instructions_pickup" placeholder="Instruções para retirada..."
+            class="form-control"></textarea>
+          <p class="mb-0 mt-1 required-alert" v-show="invalid.instructions_pickup">*Campo obrigatório</p>
         </div>
         <div class="opening-hours">
           <h3 class="mt-4">Horários de funcionamento <router-link to="/horario" class="edit-data"></router-link></h3>
@@ -116,24 +123,28 @@
       </div>
     </div>
   </div>
-  <Footer @next-config-step="nextConfigStep(dataCompany)" @valid-next-step="validNextStep(dataCompany)" :currentConfigStep="currentConfigStep" :countConfigSteps="countConfigSteps" :completeStep="verifyCompleteStep(dataCompany)" v-if="completeConfig === false"/>
+  <Footer @next-config-step="nextConfigStep(dataCompany)" @valid-next-step="validNextStep(dataCompany)"
+    :currentConfigStep="currentConfigStep" :countConfigSteps="countConfigSteps"
+    :completeStep="verifyCompleteStep(dataCompany)" v-if="completeConfig === false" />
   <Teleport to="body">
     <ModalCategories :show="showModalCategories" @close="showModalCategories = false">
       <template #header>Categoria</template>
       <template #body>
-        <FormCategories @close-modal="showModalCategories = false" @save-modal="saveCategories" :category="dataCompany.category"/>
+        <FormCategories @close-modal="showModalCategories = false" @save-modal="saveCategories"
+          :category="dataCompany.category" />
       </template>
     </ModalCategories>
     <ModalOrderTypes :show="showModalOrderTypes" @close="showModalOrderTypes = false">
       <template #header>Formas de pedidos aceitas</template>
       <template #body>
-        <FormOrderTypes @close-modal="showModalOrderTypes = false" @save-modal="saveOrderTypes" :eatOn="dataCompany.eat_on" :withdrawalOn="dataCompany.withdrawal_on"/>
+        <FormOrderTypes @close-modal="showModalOrderTypes = false" @save-modal="saveOrderTypes"
+          :eatOn="dataCompany.eat_on" :withdrawalOn="dataCompany.withdrawal_on" />
       </template>
     </ModalOrderTypes>
     <ModalCompany :show="showModalCompany" @close="showModalCompany = false">
       <template #header>Informações gerais</template>
       <template #body>
-        <FormCompany @close-modal="showModalCompany = false" @save-modal="saveCompany" :company="dataCompany"/>
+        <FormCompany @close-modal="showModalCompany = false" @save-modal="saveCompany" :company="dataCompany" />
       </template>
     </ModalCompany>
   </Teleport>
@@ -141,12 +152,14 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import axios from 'axios';
 import ModalCategories from "../components/ModalBase.vue";
 import ModalOrderTypes from "../components/ModalBase.vue";
 import ModalCompany from "../components/ModalBase.vue";
 
+const router = useRouter();
 const store = useStore();
 
 const showModalCategories = ref(false);
@@ -167,13 +180,22 @@ const dataCompany = reactive({
   city: "",
   state: "",
   description: "",
-  withdrawal: "",
+  instructions_pickup: "",
   opening_hours: [],
   preparation_time: 0,
-  category: "",
+  categories: [],
   eat_on: false,
   withdrawal_on: false,
   scheduling: false,
+});
+
+const invalid = reactive({
+  logoPhoto: false,
+  coverPhoto: false,
+  categories: false,
+  orderTypes: false,
+  description: false,
+  withdrawal: false
 });
 
 const formattedOpeningHours = computed(() => {
@@ -198,6 +220,25 @@ const formattedOpeningHours = computed(() => {
     })
     .join('\n');
 });
+
+async function saveDescriptionAndWithdrawal(completeConfig) {
+  try {
+    await saveData({
+      allows_schedule: dataCompany.toggleScheduling,
+      instructions_pickup: dataCompany.instructions_pickup,
+      description: dataCompany.description
+    });
+    if (Object.values(invalid).every(value => value === false)) {
+      console.log('Erro ao salvar os dados');
+      if (completeConfig) {
+        store.dispatch('saveCompleteStep', 'profile');
+        router.push('/cardapio');
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao salvar os dados:', error);
+  }
+}
 
 async function uploadLogo() {
   try {
@@ -228,19 +269,25 @@ async function selectFile() {
   });
 }
 
+async function saveData(data) {
+  try {
+    await axios.patch(`https://api.prattuapp.com.br/api/restaurants/${dataCompany.id}/details`, data, {
+      headers: {
+        'Authorization': `Bearer ${store.state.token}`,
+        'Content-Type': 'application/json',
+      }
+    });
+  } catch (error) {
+    console.error(`Erro ao salvar dados:`, error);
+  }
+}
+
 async function uploadImage(file, field) {
   try {
     const formData = new FormData();
     formData.append(field, file);
 
-    const userResponse = await axios.get('https://api.prattuapp.com.br/api/users/me', {
-      headers: {
-        'Authorization': `Bearer ${store.state.token}`
-      }
-    });
-    const restaurantId = userResponse.data.restaurant_id;
-
-    await axios.post(`https://api.prattuapp.com.br/api/restaurants/${restaurantId}/update-logo-cover`, formData, {
+    await axios.post(`https://api.prattuapp.com.br/api/restaurants/${dataCompany.id}/update-logo-cover`, formData, {
       headers: {
         'Authorization': `Bearer ${store.state.token}`,
         'Content-Type': 'multipart/form-data'
@@ -262,6 +309,7 @@ async function uploadImage(file, field) {
 async function removeLogo() {
   try {
     alert(`Fazer a chamada da api`);
+    await uploadImage("", 'logo_photo');
     dataCompany.logo_photo = "";
   } catch (error) {
     console.error('Erro ao remover logotipo:', error);
@@ -271,6 +319,7 @@ async function removeLogo() {
 async function removeCover() {
   try {
     alert(`Fazer a chamada da api`);
+    await uploadImage("", 'cover_photo');
     dataCompany.cover_photo = "";
   } catch (error) {
     console.error('Erro ao remover logotipo:', error);
@@ -284,14 +333,30 @@ async function saveOrderTypes(data) {
 }
 
 async function toggleScheduling() {
-  alert("Realizar a chamada  da api!");
+  try {
+    await saveData({
+      allows_schedule: dataCompany.allows_schedule,
+    });
+  } catch (error) {
+    console.error('Erro ao salvar os dados:', error);
+  }
 }
 
-async function saveCategories(data) {
-  alert("Precisa fazer a chamada para a api");
-  dataCompany.category = data;
+async function saveCategories(category) {
+  try {
+    const formData = {
+      categories: [category.id]
+    };
+    await axios.put(`https://api.prattuapp.com.br/api/categories-restaurants/${dataCompany.id}/categories`, formData, {
+      headers: {
+        'Authorization': `Bearer ${store.state.token}`
+      }
+    });
+    dataCompany.categories = [category];
+  } catch (error) {
+    console.error(`Erro ao salvar dados:`, error);
+  }
 }
-
 
 onMounted(async () => {
   await fetchData();
@@ -311,11 +376,35 @@ async function fetchData() {
         'Authorization': `Bearer ${store.state.token}`
       }
     });
-    
+
     Object.assign(dataCompany, restaurantResponse.data);
   } catch (error) {
     console.error('Erro ao buscar dados do restaurante:', error);
   }
+}
+
+async function validNextStep(dataCompany) {
+  invalid.logoPhoto = !(typeof dataCompany?.logo_photo === "string" && dataCompany?.logo_photo.trim() !== "");
+  invalid.coverPhoto = !(typeof dataCompany?.cover_photo === "string" && dataCompany?.cover_photo.trim() !== "");
+  invalid.description = !(typeof dataCompany?.description === "string" && dataCompany?.description.trim() !== "");
+  invalid.instructions_pickup = !(typeof dataCompany?.instructions_pickup === "string" && dataCompany?.instructions_pickup.trim() !== "");
+  invalid.categories = !(Array.isArray(dataCompany?.categories) && typeof dataCompany.categories[0] === 'object');
+  invalid.orderTypes = !(dataCompany.withdrawal_on || dataCompany.eat_on);
+  return !(invalid.logoPhoto || invalid.coverPhoto || invalid.description || invalid.instructions_pickup || invalid.categories || invalid.orderTypes);
+}
+async function nextConfigStep(dataCompany) {
+  validNextStep(dataCompany);
+  saveDescriptionAndWithdrawal(true);
+}
+async function verifyCompleteStep(dataCompany) {
+  return (
+    (typeof dataCompany?.logo_photo === "string" && dataCompany?.logo_photo.trim() !== "")
+    && (typeof dataCompany?.cover_photo === "string" && dataCompany?.cover_photo.trim() !== "")
+    && (typeof dataCompany?.description === "string" && dataCompany?.description.trim() !== "")
+    && (typeof dataCompany?.instructions_pickup === "string" && dataCompany?.instructions_pickup.trim() !== "")
+    && (typeof dataCompany?.categories === "object" && Array.isArray(dataCompany?.categories) && typeof dataCompany.categories[0])
+    && (dataCompany.withdrawal_on || dataCompany.eat_on)
+  );
 }
 </script>
 
@@ -335,14 +424,6 @@ export default {
       completeConfig: this.$store.state.completeConfig,
       currentConfigStep: 3,
       countConfigSteps: 5,
-      invalid: {
-        logoPhoto: false,
-        coverPhoto: false,
-        category: false,
-        orderTypes: false,
-        description: false,
-        withdrawal: false
-      },
       sidebarData: {
         logo: "/img/logo1.png",
         company: "TATÁ Sushi",
@@ -359,7 +440,7 @@ export default {
         }
       },
       navbarData: {}
-    }            
+    }
   },
   components: {
     Navbar,
@@ -380,33 +461,6 @@ export default {
     saveCompany(data) {
       this.dataCompany = data;
     },
-    saveDescriptionAndWithdrawal() {
-      alert("Precisa fazer a chamada para a api para Descrição e Instruções para retirada");
-    },
-    validNextStep(dataCompany) {
-      this.invalid.logoPhoto = !(typeof dataCompany?.logo_photo === "string" &&  dataCompany?.logo_photo.trim() !== "");
-      this.invalid.coverPhoto = !(typeof dataCompany?.cover_photo === "string" &&  dataCompany?.cover_photo.trim() !== "");
-      this.invalid.description = !(typeof dataCompany?.description === "string" &&  dataCompany?.description.trim() !== "");
-      this.invalid.withdrawal = !(typeof dataCompany?.withdrawal === "string" &&  dataCompany?.withdrawal.trim() !== "");
-      this.invalid.category = !(typeof dataCompany?.category === "string" &&  dataCompany?.category.trim() !== "");
-      this.invalid.orderTypes = !(dataCompany.withdrawal_on || dataCompany.eat_on);
-    },
-    nextConfigStep(dataCompany) {
-      this.validNextStep(dataCompany);
-      this.saveDescriptionAndWithdrawal();
-      this.saveCompleteStep('profile');
-      this.$router.push('/cardapio');
-    },
-    verifyCompleteStep(dataCompany) {
-      return (
-        (typeof dataCompany?.logo_photo === "string" &&  dataCompany?.logo_photo.trim() !== "")
-        && (typeof dataCompany?.cover_photo === "string" &&  dataCompany?.cover_photo.trim() !== "")
-        && (typeof dataCompany?.description === "string" &&  dataCompany?.description.trim() !== "")
-        && (typeof dataCompany?.withdrawal === "string" &&  dataCompany?.withdrawal.trim() !== "")
-        && (typeof dataCompany?.category === "string" &&  dataCompany?.category.trim() !== "")
-        && (dataCompany.withdrawal_on || dataCompany.eat_on)
-      );
-    },
   }
 };
 </script>
@@ -414,6 +468,7 @@ export default {
 .profile-logo {
   text-align: center;
   max-width: 150px;
+
   img {
     max-width: 100px;
     height: 100px;
@@ -422,55 +477,73 @@ export default {
     object-fit: cover;
   }
 }
+
 .profile-image img {
   max-width: 100%;
   cursor: pointer;
 }
-.description textarea, .withdrawal textarea {
+
+.description textarea,
+.withdrawal textarea {
   width: 100%;
   height: 150px;
   resize: none;
   padding: 10px;
 }
+
 .information {
   .trade {
     font-weight: 500;
   }
-  p, span {
+
+  p,
+  span {
     font-size: 16px;
   }
 }
+
 .opening-hours {
   white-space: pre;
 }
-.categories ul, .preparation-time ul, .order-types ul {
+
+.categories ul,
+.preparation-time ul,
+.order-types ul {
   padding-left: 0;
+
   li {
     list-style-type: none;
-    display: inline-block;            
+    display: inline-block;
     margin-right: 15px;
   }
+
   .input-base {
     border-radius: 18px;
     padding-top: 12px;
     padding-bottom: 12px;
   }
-  li.input-base, li span.input-base {
+
+  li.input-base,
+  li span.input-base {
     background-color: $light-blue;
   }
+
   li span.input-base {
-    display: inline-block; 
-    margin-left: 5px; 
+    display: inline-block;
+    margin-left: 5px;
   }
+
   li.inactive {
     background-color: $gray-bg;
   }
 }
+
 .local-cover {
   cursor: pointer;
   background-color: $gray-bg;
   padding: 15px;
   border-radius: 8px;
+
   .border {
     width: 100%;
     min-height: 150px;
@@ -480,6 +553,7 @@ export default {
     padding: 20px;
     display: grid;
     place-items: center;
+
     .label-image {
       opacity: 0.4;
       display: block;
@@ -495,6 +569,7 @@ export default {
   border-radius: 50%;
   width: 100%;
   aspect-ratio: 1 / 1;
+
   .border {
     width: 100%;
     aspect-ratio: 1 / 1;
@@ -503,6 +578,7 @@ export default {
     border-radius: 50%;
     display: grid;
     place-items: center;
+
     .label-image {
       opacity: 0.4;
       display: block;

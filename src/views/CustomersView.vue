@@ -37,18 +37,19 @@
                     address: "R. João Cachoeira, 278",
                     active: "insights",
                     open: false
-                 },
+                },
                 navbarData: {
                     time: "9 horas",
                     notifications: 4
                 },
                 intervals: {
-             
-                    oneMonth: "Mês",
-                    sixMonths: "6 meses"
+                    //oneMonth: "Mês",
+
+                    "7_days": "7 dias",
+                    "1_month": "mês",
+                    "6_months": "6 meses",
                 },
                 intervalsLastLabel: {
-                 
                     oneMonth: "mês passado",
                     sixMonths: "6 meses anteriores"
                 },
@@ -89,7 +90,7 @@
             Footer,
             CardTypes,
             ChartDays
-        }
+        },
     }
 </script>
 

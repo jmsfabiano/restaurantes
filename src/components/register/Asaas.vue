@@ -76,23 +76,19 @@ export default {
                 this.invalid.email = true;
             } else {
                 this.invalid.email = false;
-                // try {
-                //     const response = await axios.post('https://api.prattuapp.com.br/api/create-asaas-account', {}, {
-                //         headers: {
-                //             Authorization: `Bearer ${this.$store.state.token}`
-                //         }
-                //     });
-                //     this.modalTitle = 'Conta Asaas criada com sucesso';
-                //     this.modalMessage = `Resposta da API: ${JSON.stringify(response.data, null, 2)}`;
-                // } catch (error) {
-                //     const errorMessage = error.response?.data ? error.response.data.details : error.message;
-                //     this.modalTitle = 'Erro ao criar conta da Asaas';
-                //     this.modalMessage = `Erro: ${errorMessage}`;
-                // } finally {
-                //     this.showModal = true;
-                // }
-                alert("precisa ajustar o envio!");
-                this.$emit('nextStep');
+                try {
+                    const response = await axios.post('https://api.prattuapp.com.br/api/create-asaas-account', {}, {
+                        headers: {
+                            Authorization: `Bearer ${this.$store.state.token}`
+                        }
+                    });
+                    this.$emit('nextStep');
+                } catch (error) {
+                    const errorMessage = error.response?.data ? error.response.data.details : error.message;
+                    this.modalTitle = 'Erro ao criar conta da Asaas';
+                    this.modalMessage = `Erro: ${errorMessage}`;
+                    this.showModal = true;
+                }
             }
         },
         toggleSameEmail() {

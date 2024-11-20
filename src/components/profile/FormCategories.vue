@@ -4,7 +4,7 @@
             <div class="select-placeholder mb-3">
                 <label v-if="selectCategory === ''">Selecione uma categoria</label>
                 <select class="form-select" v-model="selectCategory">
-                    <option v-for="(category, index) in allCategories" :key="index">{{ category }}</option>
+                    <option v-for="(category, index) in allCategories" :key="index" :value="category">{{ category.name }}</option>
                 </select>
             </div>
         </div>
@@ -21,12 +21,15 @@
 </template>
 
 <script>
+    import axios from 'axios';
+    import store from '@/store';
+
     export default {
         name: "FormCategories",
         data() {
             return {
                 selectCategory: "",
-                allCategories: ["Comida oriental", "Comida Italiana", "Pizzas", "Lanches", "Variados"]
+                allCategories: []
             } 
         },
         methods: {
@@ -39,8 +42,14 @@
         props: {
             category: Object
         },
-        mounted() {
+        async mounted() {
             this.selectCategory = this.category;
+            const categoriesResponse = await axios.get(`https://api.prattuapp.com.br/api/categories-restaurant`, {
+                headers: {
+                    'Authorization': `Bearer ${store.state.token}`
+                }
+            });
+            this.allCategories = categoriesResponse.data.categories;
         }
     };
 </script>

@@ -19,10 +19,11 @@
             <div class="col-sm-3">
                 <div class="chart">
                     <div class="label">
-                        <h4 class="number">{{ countCustomers }}</h4>
+                        <h4 class="number">{{ generalData[intervalSelected]?.current_period_count || 0 }}</h4>
                         <p class="text">Clientes totais</p>
-                        <span class="card-percent" :class="dataCustomers.generalCompare[intervalSelected] > 0 ? 'icon-var-up' : 'icon-var-down'">
-                            {{ Math.abs(dataCustomers.generalCompare[intervalSelected]) }}%
+                        <span class="card-percent" 
+                            :class="(generalData[intervalSelected]?.percentage_increase || 0) > 0 ? 'icon-var-up' : 'icon-var-down'">
+                            {{ Math.abs(generalData[intervalSelected]?.percentage_increase || 0) }}%
                         </span>
                     </div>
                     <canvas id="doughnutChart" @mouseleave="resetColorChart()"></canvas>
@@ -30,7 +31,7 @@
             </div>
             <div class="col-sm-9 d-flex align-items-center">
                 <div class="row">
-                    <div class="col d-flex list-cards" v-for="(data, index) in dataCustomers[intervalSelected]" :key="index">
+                    <div class="col d-flex list-cards" v-for="(data, index) in dataCustomers" :key="index">
                         <div class="card" :id="'card-'+index" @mouseover="setColorChart(index)" @mouseleave="resetColorChart()">
                             <h3 class="title">
                                 <span class="legend" :style="{ backgroundColor: baseColors[index] }"></span>
@@ -38,14 +39,21 @@
                             </h3>
                             <p class="description">{{ typeLabels[index].description }}</p>
                             <h4 class="number">
-                                {{ data.number }}
-                                <span class="card-percent" :class="data.compare > 0 ? 'icon-var-up' : 'icon-var-down'">
-                                    {{ Math.abs(data.compare) }}%
+                                {{ data?.stats[intervalSelected]?.current_period_count }}
+                                <span class="card-percent" :class="(data?.stats[intervalSelected]?.percentage_increase || 0) > 0 ? 'icon-var-up' : 'icon-var-down'">
+                                    {{ Math.abs(data?.stats[intervalSelected]?.percentage_increase) }}%
                                 </span>
                             </h4>
                             <hr>
-                            <p class="other-data">{{ Math.round(data.number / countCustomers * 100) }}% do total de vendas</p>
-                            <p class="other-data">R$ {{ data.tiket.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} ticket médio</p>
+                            <p v-if="data?.stats[intervalSelected]?.current_period_count " class="other-data">
+                                {{ Math.round(data?.stats[intervalSelected]?.current_period_count / countCustomers * 100) }}
+                                % do total de vendas
+                            </p>
+                            <p v-else class="other-data">100 % do total de vendas</p>
+                            <p class="other-data">
+                                R$ {{ data?.average_ticket.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} 
+                                ticket médio
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -55,6 +63,8 @@
 </template>
 
 <script>
+    import axios from 'axios';
+    import store from '@/store';
     import { shallowRef } from 'vue';
     import Chart from 'chart.js/auto';
     import ChartDataLabels from 'chartjs-plugin-datalabels'
@@ -63,71 +73,48 @@
         name: "CardTypes",
         data() {
             return {
-                intervalSelected: "oneMonth",
+                intervalSelected: "7_days",
                 countCustomers: 0,
                 reportChart: [],
+                showData: [],
                 baseColors: {
-                    new: "rgba(153,154,242,0.6)", 
-                    usual: "rgba(24,226,28,0.6)", 
-                    casual: "rgba(58,170,244,0.6)"
+                    new_customers: "rgba(153,154,242,0.6)", 
+                    frequent_customers: "rgba(24,226,28,0.6)", 
+                    occasional_customers: "rgba(58,170,244,0.6)"
                 },
                 baseColorsHover: {
-                    new: "rgba(153,154,242,1)", 
-                    usual: "rgba(24,226,28,1)", 
-                    casual: "rgba(58,170,244,1)"
+                    new_customers: "rgba(153,154,242,1)", 
+                    frequent_customers: "rgba(24,226,28,1)", 
+                    occasional_customers: "rgba(58,170,244,1)"
                 },
                 typeLabels: {
-                    new: {
+                    new_customers: {
                         name: "Novos clientes",
                         description: "Clientes que pediram pela primeira vez na sua loja."
                     },
-                    usual: {
+                    frequent_customers: {
                         name: "Clientes frequentes",
                         description: "Clientes que realizaram mais de 4 pedidos na sua loja."
                     },
-                    casual: {
+                    occasional_customers: {
                         name: "Clientes ocasionais",
                         description: "Clientes que pediram até 4 vezes na sua loja."
                     }
                 },
-                dataCustomers: {
-                    generalCompare: {
-                        sevenDays: 3.5,
-                        oneMonth: -12,
-                        sixMonths: 59,
-                    },
-                    sevenDays: {
-                        new: { number: 0, compare: 92.3, tiket: 12.45 },
-                        casual: { number: 25, compare: -8, tiket: 12.65 },
-                        usual: { number: 18, compare: 15, tiket: 19.45 }
-                    },
-                    oneMonth: {
-                        new: { number: 20, compare: -2, tiket: 32.50 },
-                        casual: { number: 68, compare: 22, tiket: 12.45 },
-                        usual: { number: 30, compare: 15, tiket: 19.45 },
-                    },
-                    sixMonths: {
-                        new: { number: 110, compare: 19, tiket: 17.45 },
-                        casual: { number: 120, compare: 15, tiket: 13.45 },
-                        usual: { number: 135, compare: -35, tiket: 12.45 }
-                    }
-                }
+                reportData: [],
+                generalData: [],
             }
         },
         props: {
             intervals: Object
         },
         methods: {
-            countTotal() {
-                this.countCustomers = Object.values(this.dataCustomers[this.intervalSelected]).map(item => item.number).reduce(function(accumulator, value){ 
-                    return accumulator + value;
-                }, 0);;
+            countTotal(data) {
+                this.countCustomers = data[this.intervalSelected].current_period_count ;
             },
-            createChart() {
-                const storage = Object.values(this.dataCustomers[this.intervalSelected]).map(item => item.number);
-                
+            createChart() {                
                 var data = {
-                    labels: Object.keys(this.baseColors),
+                    labels: ["new_customers", "frequent_customers", "occasional_customers"],
                     datasets: [
                         {
                             label: "Clientes",
@@ -135,10 +122,16 @@
                             borderSkipped: false,
                             backgroundColor: Object.values(this.baseColors),
                             hoverBackgroundColor: Object.values(this.baseColorsHover),
-                            data: Object.values(storage)
+                            data: [ 
+                                this.reportData?.new_customers?.stats[this.intervalSelected]?.current_period_count | 0,
+                                this.reportData?.frequent_customers?.stats[this.intervalSelected]?.current_period_count | 0,
+                                this.reportData?.occasional_customers?.stats[this.intervalSelected]?.current_period_count | 0,
+                            ]
                         }
                     ]
                 };
+
+                this.showData = shallowRef(data);
                 
                 var options = { 
                     maintainAspectRatio: false,
@@ -162,9 +155,9 @@
                             this.reportChart.data.datasets[0].backgroundColor = ["rgba(241, 244, 244,1)", "rgba(241, 244, 244,1)", "rgba(241, 244, 244,1)"];
                             this.reportChart.data.datasets[0].backgroundColor[index] = this.baseColorsHover[items[index]];
                             this.reportChart.update();
-                            document.querySelector('#card-new').classList.remove('active-new');
-                            document.querySelector('#card-usual').classList.remove('active-usual');
-                            document.querySelector('#card-casual').classList.remove('active-casual');
+                            document.querySelector('#card-new_customers').classList.remove('active-new_customers');
+                            document.querySelector('#card-frequent_customers').classList.remove('active-frequent_customers');
+                            document.querySelector('#card-occasional_customers').classList.remove('active-occasional_customers');
                             document.querySelector('#card-'+items[index]).classList.add('active-'+items[index]);
                         } 
                     }
@@ -180,45 +173,56 @@
                 );
             },
             updateChart() {
-                const storage = Object.values(this.dataCustomers[this.intervalSelected]).map(item => item.number);
-                const data = Object.values(storage);
+                const data = [ 
+                    this.reportData?.new_customers?.stats[this.intervalSelected]?.current_period_count | 0,
+                    this.reportData?.frequent_customers?.stats[this.intervalSelected]?.current_period_count | 0,
+                    this.reportData?.occasional_customers?.stats[this.intervalSelected]?.current_period_count | 0,
+                ];
                 this.reportChart.data.datasets[0].data = data;
                 this.reportChart.update();
-            },
-            searchMaxDay() {
-                const storage = Object.values(this.dataCustomers[this.intervalSelected]).map(item => item.number);
-                let index = null;
-                let maxValue = -Infinity;
-                let i = 0;
-                for (let day in storage) {
-                    if (storage[day] > maxValue) {
-                        maxValue = storage[day]; 
-                        index = i; 
-                    }
-                    i++;
-                }
-                return index;
             },
             resetColorChart() {
                 this.reportChart.data.datasets[0].backgroundColor = Object.values(this.baseColors);
                 this.reportChart.update();
-                document.querySelector('#card-new').classList.remove('active-new');
-                document.querySelector('#card-usual').classList.remove('active-usual');
-                document.querySelector('#card-casual').classList.remove('active-casual');
+                document.querySelector('#card-new_customers').classList.remove('active-new_customers');
+                document.querySelector('#card-frequent_customers').classList.remove('active-frequent_customers');
+                document.querySelector('#card-occasional_customers').classList.remove('active-occasional_customers');
             },
             setColorChart(type) {
                 this.reportChart.data.datasets[0].backgroundColor = ["rgba(241, 244, 244,1)", "rgba(241, 244, 244,1)", "rgba(241, 244, 244,1)"];
                 let index = Object.keys(this.baseColors).indexOf(type);
                 this.reportChart.data.datasets[0].backgroundColor[index] = this.baseColorsHover[type];
                 this.reportChart.update();
-                document.querySelector('#card-new').classList.remove('active-new');
-                document.querySelector('#card-usual').classList.remove('active-usual');
-                document.querySelector('#card-casual').classList.remove('active-casual');
+                document.querySelector('#card-new_customers').classList.remove('active-new_customers');
+                document.querySelector('#card-frequent_customers').classList.remove('active-frequent_customers');
+                document.querySelector('#card-occasional_customers').classList.remove('active-occasional_customers');
                 document.querySelector('#card-'+type).classList.add('active-'+type);
             }
         },
-        mounted() {
-            this.countTotal();
+        async mounted() {            
+
+            this.selectCategory = this.category;
+            const userResponse = await axios.get('https://api.prattuapp.com.br/api/users/me', {
+                headers: {
+                    'Authorization': `Bearer ${store.state.token}`
+                }
+            });
+            const restaurantId = userResponse.data.restaurant_id;
+            const customerAnalysisResponse = await axios.get(`https://api.prattuapp.com.br/api/customer-analysis/${restaurantId}`, {
+                headers: {
+                    'Authorization': `Bearer ${store.state.token}`
+                }
+            });
+            this.reportData = customerAnalysisResponse.data;
+            this.dataCustomers = Object.keys(this.reportData).reduce((acc, key) => {
+                if (key !== 'total_customers') {
+                    acc[key] = this.reportData[key];
+                }
+                return acc;
+            }, {});
+
+            this.generalData = this.reportData?.total_customers?.stats;
+            this.countTotal(this.reportData?.total_customers?.stats);
             this.createChart();
         }
     };
@@ -290,13 +294,13 @@
         }
     }
 
-    .active-new {
+    .active-new_customers {
         background-color: rgba(198, 199, 248,0.6) !important;
     }
-    .active-usual {
+    .active-frequent_customers {
         background-color: rgba(24,226,28,0.3) !important;
     }
-    .active-casual {
+    .active-occasional_customers {
         background-color: rgba(130, 201, 248,0.4) !important;
     }
 

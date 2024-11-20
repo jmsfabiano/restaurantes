@@ -122,18 +122,31 @@
             >
               Deletar
             </button>
-            <button @click="savePromotion" class="btn-save" :class="validate() ? 'enabled' : 'disabled'" :disabled="!validate()">Salvar</button>
+            <button @click="savePromotion(false)" class="btn-save" :class="validate() ? 'enabled' : 'disabled'" :disabled="!validate()">Salvar</button>
           </div>
         </div>
       </div>
     </div>
   </Transition>
+  <ModalBase :show="modalMessage.show" @close="modalMessage.show = false">
+      <template #header>
+          <h3>{{ modalMessage.title }}</h3>
+      </template>
+      <template #body>
+          <p>{{ modalMessage.message }}</p>
+      </template>
+      <template #footer>
+          <button class="btn btn-cancel" @click="modalMessage.show = false">Voltar</button>
+          <button class="btn btn-replace" @click="savePromotion(true)">Substituir</button>
+      </template>
+  </ModalBase>
 </template>
 
 <script setup>
 import { ref, watch, onMounted, computed } from 'vue';
 import { useStore } from 'vuex';
 import axios from 'axios';
+import ModalBase from '@/components/ModalBase.vue';
 
 const props = defineProps({
   show: Boolean,
@@ -153,6 +166,14 @@ const formData = ref({
   type: null,
   selectedProducts: '',
   noEnd: false,
+  replace: false,
+});
+
+const modalMessage = ref({
+  show: false,
+  title: '',
+  message: '',
+  actions: [],
 });
 
 const products = ref([]);
@@ -273,7 +294,7 @@ function changePercentage(operation) {
   }
 }
 
-async function savePromotion() {
+async function savePromotion(replace = false) {
   try {
     const url = formData.value.id
       ? `https://api.prattuapp.com.br/api/discounts/${formData.value.id}/${formData.value.type}`
@@ -296,7 +317,10 @@ async function savePromotion() {
       data.code = formData.value.couponCode;
       data.value = formData.value.percentage;
     }
-
+    if (replace) {
+      data.replace = replace;
+    }
+    
     await axios[method](url, data, {
       headers: {
         Authorization: `Bearer ${store.state.token}`,
@@ -307,6 +331,14 @@ async function savePromotion() {
     emit('close');
     window.location.reload();
   } catch (error) {
+    if (error.response.data?.error) {
+      modalMessage.value.show = true;
+      modalMessage.value.title = 'Erro ao salvar a promoção';
+      modalMessage.value.message = error.response.data.error;
+      if (typeof error.response.data?.action === 'string') {
+        modalMessage.value.actions = error.response.data.action.split('/');
+      }
+    }
     console.error('Erro ao salvar a promoção:', error);
   }
 }
@@ -569,6 +601,10 @@ input[type="number"] {
 /* Remove as setas de incremento/decremento em navegadores modernos que suportam a propriedade 'appearance' */
 input[type="number"] {
   appearance: none;
+}
+
+.btn-replace {
+  margin-left: 15px;
 }
 
 </style>
