@@ -57,8 +57,8 @@
       <div class="col-lg-6">
         <div class="categories">
           <hr />
-          <h3>Categorias <span class="edit-data" @click="showModalCategories = true"></span></h3>
-          <p class="hint" v-if="completeConfig">Atenção: As categorias poderão ser editadas somente de 20 em 20 dias.
+          <h3>Categoria <span class="edit-data" @click="showModalCategories = true"></span></h3>
+          <p class="hint" v-if="completeConfig">Atenção: A categoria poderá ser editadas somente de 20 em 20 dias.
           </p>
           <p class="hint" v-else>Selecione a categoria na qual o seu estabelecimento faz parte.</p>
           <ul v-if="Array.isArray(dataCompany?.categories) && typeof dataCompany.categories[0]">
